@@ -1,0 +1,154 @@
+%%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[twoside]{article}
+
+\usepackage{lipsum} % Package to generate dummy text throughout this template
+
+\usepackage[sc]{mathpazo} % Use the Palatino font
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\linespread{1.05} %	 Line spacing - Palatino needs more space between lines
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry} % Document margins
+\usepackage{multicol} % Used for the two-column layout of the document
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{booktabs} % Horizontal rules in tables
+\usepackage{float} % Required for tables and figures in the multi-column environment - they need to be placed in specific locations with the [H] (e.g. \begin{table}[H])
+\usepackage{hyperref} % For hyperlinks in the PDF
+
+\usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
+\usepackage{paralist} % Used for the compactitem environment which makes bullet points with less space between them
+\usepackage{graphicx}
+\graphicspath{{figures/}} % Specifies the directory where pictures are stored
+
+\usepackage{abstract} % Allows abstract customization
+\renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
+\renewcommand{\abstracttextfont}{\normalfont\small\itshape} % Set the abstract itself to small italic text
+
+\usepackage{titlesec} % Allows customization of titles
+\renewcommand\thesection{\Roman{section}} % Roman numerals for the sections
+\renewcommand\thesubsection{\Roman{subsection}} % Roman numerals for subsections
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{} % Change the look of the section titles
+
+\usepackage{fancyhdr} % Headers and footers
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead{} % Blank out the default header
+\fancyfoot{} % Blank out the default footer
+\fancyhead[C]{ Technische Universit\"at M\"unchen $\bullet$ Neuroscientific System Theory } % Custom header text
+\fancyfoot[RO,LE]{\thepage} % Custom footer text
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\title{\vspace{-15mm}\fontsize{24pt}{10pt}\selectfont\textbf{A recording system for event-based vision ground truth data sets}} % Article title
+\author{
+\large
+\textsc{Marouane Ben Romdhane}\\[2mm] % Your name
+%\thanks{A thank you or further information}
+\normalsize \textbf{supervisor: }{M.Sc. Lukas Everding}\\ % Your email address
+%\normalsize Technische Universit\"at M\"unchen \\ % Your institution
+\vspace{-5mm}
+}
+\date{}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\maketitle % Insert title
+
+\thispagestyle{fancy} % All pages have headers and footers
+
+%----------------------------------------------------------------------------------------
+%	ABSTRACT
+%----------------------------------------------------------------------------------------
+
+\begin{abstract}
+This report explains the functionality of the code written, as part of my research assistant job. The code aims to compute the real world coordinates of the events caught by the eDVS, i.e. the depth of each event. The code is written with Matlab 2015b. For recording, the Motive:Tracker software and the eDVS recording tool are used. This report explains the functionality of the code and the measurement done to get the used values.
+\end{abstract}
+
+\begin{multicols}{2} % Two-column layout throughout the main article text
+
+\section{Introduction}
+This report has two part. First section explains measurement done in order to get the dimension of the field of view of the camera. The second part presents briefly the tasks of the code. \\
+Two things should be taken in consideration: first, the unit used in both code and report is \emph{cm}. Second, the left lens of the eDVS is considered as the master and all the work is based on this lens.
+
+\section{Field of View}
+The first task was to get a sense of the coordinates of the field of view (FOV) of the eDVS. The eDVS has a squared field of view. Its dimensions was measured manually through a simple experiment.\\
+A cubic box with all edges measuring 35 cm, is set in front the camera. Then, using the camera and the eDVS-Viewer software, we tried to fit the edges of one face of the box, exactly on the outline of the camera viewer window. Once achieved, we measured the distance between the camera and the box. To be more accurate, the distance between the left lens and the center of the face of the box is measured. This distance represents the \emph{Line of Sight} (LOS). The following figure summarizes the results of the measurements. 
+\begin{center}
+\includegraphics[width=0.4\textwidth]{figures/fov}
+  \captionof{figure}{measurement of FOV}
+\label{fig:FOV}
+\end{center}
+The FOV and LOS values are used in our code and saved respectively in the variables \emph{fov} and \emph{los}.
+\begin{itemize}
+\item width and height of the FOV: \emph{fov} = 35 cm. 
+\item line of sight: \emph{los} = 30 cm.
+\end{itemize}
+
+\section{Method}
+This part of the report explains the prerequisites of using the written code, and then explains each step it.\\
+\subsection{Recording}
+A number \emph{n} of rectangular cuboid shaped boxes is distributed in the room. 4\emph{ Motion Capture Markers} are glued on the 4 upper vertices of each box. \textbf{The first requirement} is that the 4 markers should have the same height. Using \emph{Motive:Tracker} software, we create a rigid body for each box. \textbf{The second requirement} is that each body must be named "Box(i)", where i is the index of the box\footnote{i.e. the name of the first box is Box1}. Three other markers are set on the eDVS. Figure \ref{fig:eDVS} shows how the markers should be put on the camera: two on top of the lenses and a third one is set in such a way that the three markers create a triangle. Here, the last marker \textbf{must be closer to} the right lens. The three markers should have the same height, when first glued on the camera. A rigid body called "Camera" is created with the Motive:Tracker from the three markers.
+\begin{center}
+\includegraphics[width=0.3\textwidth]{figures/eDVS}
+  \captionof{figure}{placement of the markers on the eDVS}
+\label{fig:eDVS}
+\end{center}
+Once the recording is finished, we get some log files, holding data about the events on the eDVS and the position of the markers on the boxes and the camera. A log file for each rigid body created in the software, shows the following data:
+\begin{itemize}
+\item[\textbf{1st.}] absolute time
+\item[\textbf{2nd.}] latency 
+\item[\textbf{3rd.}] frame number
+\item[\textbf{4th.}] object id
+\item[\textbf{5th.}] x pos of rigid body
+\item[\textbf{6th.}] y pos of rigid body
+\item[\textbf{7th.}] z pos of rigid body
+\item[\textbf{8th.}] roll angle in radians of rigid body
+\item[\textbf{9th.}] pitch angle in rad of rigid body
+\item[\textbf{10th.}] yaw angle in rad of rigid body
+\item[\textbf{11th.}] roll angle in degrees of rigid body
+\item[\textbf{12th.}] pitch angle in deg of rigid body
+\item[\textbf{13th.}] yaw angle in deg of rigid body
+\item[\textbf{14th to 17th.}] position as quaternions 
+\item[\textbf{18th.}] rigid markers mean error
+\item[\textbf{19th.}] number of rigid markers
+\item[\textbf{from 20th.}] the raw data for every marker: number, id, size, x, y, z for every marker used.
+\end{itemize}
+The events log files contains to types of time stamps
+\begin{itemize}
+\item time stamp of the tracking system, followed by -1
+\item time stamp of each event, followed by the position of the event on the sensor of the camera
+\end{itemize}
+\subsection{Explaining the code}
+The written code do the following tasks:
+\begin{enumerate}
+\item Fetch the data from the boxes log files. Sort the markers clockwise and draw the boxes.
+\item Create cylinders around each edge of the boxes with a radius equals to tolerance\footnote{tolerance value is set when the code is first executed}.
+\item For each new time stamp of the tracking system from the tracker software do the followings:
+	\begin{enumerate}
+	\item Create a matrix called \emph{event}, holding the events related to the current time stamp.
+	\item Synchronize the events with the corresponding camera position. This is done by looking for closest time to the current events time, in the camera log file .
+	\item Correct the position of the markers on the camera. A $3\times3$ matrix \emph{cam} is created. The first row of the matrix cam should hold the coordinates of the left lens. The second row holds the xyz of the right lens and the last row is for the third marker. This arrangement is done by comparing the sum of distance of the each marker to the other two markers. Obviously, if the setup explained in \ref{fig:eDVS} is followed, this sum will be the highest for the left lens, followed by the right lens and finally the back marker. 
+	\item Create the field of view of the left lens of the eDVS at the current time, 
+	\item Project each event on the FOV and draw a line \emph{L} going though the left lens and the event projection (a new line L for each event).
+	\item Compute the intersection of the line \emph{L} with all edges. If there is an intersection, save the coordinates of the intersection point\footnote{in case of multiple intersection point found with one line, choose the point with the minimum distance form the left lens.}
+	\item Finally create a matrix with 3 column called \emph{result}. The first column holds the time stamp of each event. The second column holds the real depth of each event, or NaN if the event does not hit any edge. The third column is the depth to be checked.
+\end{enumerate}
+\end{enumerate}
+
+\subsection{Results}
+At the end of the execution of the code, the final matrix is saved as \emph{result.mat}. To visualize a specific event, an additional script is written. It is sufficient to give the time stamp of an event and then the number of the events to display, and the code saves a picture with the boxes, the camera and the projection of the events. Figure \ref{fig:figure} shows an example of the result obtained.
+\begin{center}
+\includegraphics[width=0.5\textwidth]{figures/figure}
+  \captionof{figure}{visualization of the results}
+\label{fig:figure}
+\end{center}
+\end{multicols}
+
+\end{document}
